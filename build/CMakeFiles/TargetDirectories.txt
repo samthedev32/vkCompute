@@ -1,0 +1,5 @@
+/home/samthedev/Downloads/cs/build/CMakeFiles/vkCompute.dir
+/home/samthedev/Downloads/cs/build/CMakeFiles/package.dir
+/home/samthedev/Downloads/cs/build/CMakeFiles/package_source.dir
+/home/samthedev/Downloads/cs/build/CMakeFiles/edit_cache.dir
+/home/samthedev/Downloads/cs/build/CMakeFiles/rebuild_cache.dir

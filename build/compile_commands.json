@@ -1,0 +1,7 @@
+[
+{
+  "directory": "/home/samthedev/Downloads/cs/build",
+  "command": "/usr/bin/g++ -I/home/samthedev/Downloads/cs/include -g -std=gnu++17 -o CMakeFiles/vkCompute.dir/main.cpp.o -c /home/samthedev/Downloads/cs/main.cpp",
+  "file": "/home/samthedev/Downloads/cs/main.cpp"
+}
+]
