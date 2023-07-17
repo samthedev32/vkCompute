@@ -5,7 +5,8 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 
 # Source Files
 set(SOURCES
-    main.cpp
+    src/main.cpp
+    src/vkCompute.cpp
 )
 
 # Libraries
