@@ -5,8 +5,8 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 
 # Source Files
 set(SOURCES
-    src/main.cpp
-    src/vkCompute.cpp
+    src/main.c
+    src/vkCompute.c
 )
 
 # Libraries
@@ -15,7 +15,7 @@ set(LIBRARIES
 )
 
 # Project
-project(vkCompute VERSION 0.1.0 LANGUAGES C CXX)
+project(vkCompute VERSION 0.1.0 LANGUAGES C)
 
 add_executable(${PROJECT_NAME} ${SOURCES})
 target_link_libraries(${PROJECT_NAME} ${LIBRARIES})
