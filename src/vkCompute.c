@@ -1,9 +1,15 @@
+#include <stdlib.h>
 #include <vkCompute.h>
 
 #include <stdbool.h>
 #include <stdio.h>
 
 #include <vulkan/vulkan_core.h>
+
+bool vkCompute_validate(VkCompute *comp) {
+  return comp->instance &&
+         (comp->physicalDevice && comp->device && comp->queue);
+}
 
 int vkCompute_init(VkCompute *comp) {
   if (!comp)
@@ -156,22 +162,22 @@ int vkCompute_init(VkCompute *comp) {
   return 0;
 }
 
-bool findQueueFamil(VkPhysicalDevice device) {
-  uint32_t computeFamily;
+int vkCompute_new(VkCompute *comp) {
+  if (!vkCompute_validate(comp))
+    return 1;
 
-  uint32_t queueFamilyCount = 0;
-  vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, NULL);
+  if (comp->pipelines == 0 || comp->pipeline == NULL) {
+    comp->pipelines++;
+    void *tmp =
+        realloc(comp->pipeline, sizeof(*comp->pipeline) * comp->pipelines);
 
-  VkQueueFamilyProperties queueFamily[queueFamilyCount];
-  vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount,
-                                           queueFamily);
-
-  for (uint32_t i = 0; i < queueFamilyCount; i++) {
-    if (queueFamily[i].queueFlags & VK_QUEUE_COMPUTE_BIT) {
-      computeFamily = i;
-      return true;
-    }
+    if (tmp)
+      comp->pipeline = tmp;
+    else
+      return 2;
   }
 
-  return false;
+  // TODO: init pipeline
+
+  return 0;
 }
