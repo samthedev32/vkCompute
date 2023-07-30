@@ -1,10 +1,30 @@
 #include <stdlib.h>
+#include <string.h>
 #include <vkCompute.h>
 
-#include <stdbool.h>
 #include <stdio.h>
 
 #include <vulkan/vulkan_core.h>
+
+bool enableValidationLayers = true;
+
+static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
+    VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+    VkDebugUtilsMessageTypeFlagsEXT messageType,
+    const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData, void *pUserData);
+
+extern VkResult CreateDebugUtilsMessengerEXT(
+    VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT *pCreateInfo,
+    const VkAllocationCallbacks *pAllocator,
+    VkDebugUtilsMessengerEXT *pDebugMessenger);
+
+extern void
+DestroyDebugUtilsMessengerEXT(VkInstance instance,
+                              VkDebugUtilsMessengerEXT debugMessenger,
+                              const VkAllocationCallbacks *pAllocator);
+
+extern void populateDebugMessengerCreateInfo(
+    VkDebugUtilsMessengerCreateInfoEXT *createInfo);
 
 bool vkCompute_validate(VkCompute *comp) {
   return comp->instance &&
@@ -41,11 +61,23 @@ int vkCompute_init(VkCompute *comp) {
     had.queue = false;
   }
 
+  const char *validationLayer = "VK_LAYER_KHRONOS_validation";
   if (!had.instance) {
-    // if (enableValidationLayers && !checkValidationLayerSupport()) {
-    //   throw std::runtime_error("validation layers requested, but not
-    //   available");
-    // }
+    if (enableValidationLayers) {
+      uint32_t layerCount;
+      vkEnumerateInstanceLayerProperties(&layerCount, NULL);
+
+      VkLayerProperties availableLayers[layerCount];
+      vkEnumerateInstanceLayerProperties(&layerCount, availableLayers);
+
+      enableValidationLayers = false;
+      for (uint32_t i = 0; i < layerCount; i++) {
+        if (strcmp(validationLayer, availableLayers[i].layerName) == 0) {
+          enableValidationLayers = true;
+          break;
+        }
+      }
+    }
 
     VkApplicationInfo appInfo = {0};
     appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
@@ -64,22 +96,44 @@ int vkCompute_init(VkCompute *comp) {
     createInfo.ppEnabledExtensionNames = &ext;
 
     VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo = {0};
-    // if (enableValidationLayers) {
-    //   createInfo.enabledLayerCount =
-    //       static_cast<uint32_t>(validationLayers.size());
-    //   createInfo.ppEnabledLayerNames = validationLayers.data();
+    if (enableValidationLayers) {
+      createInfo.enabledLayerCount = 1;
 
-    //   populateDebugMessengerCreateInfo(debugCreateInfo);
-    //   createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT
-    //   *)&debugCreateInfo;
-    // } else {
-    createInfo.enabledLayerCount = 0;
+      createInfo.ppEnabledLayerNames = &validationLayer;
 
-    createInfo.pNext = NULL;
-    // }
+      /* Populate Debug Messenger Create Info */ {
+        debugCreateInfo.sType =
+            VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+        debugCreateInfo.messageSeverity =
+            // VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT |
+            VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
+            VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+        debugCreateInfo.messageType =
+            VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
+            VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
+            VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+        debugCreateInfo.pfnUserCallback = debugCallback;
+      }
+
+      createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT *)&debugCreateInfo;
+    } else {
+      createInfo.enabledLayerCount = 0;
+
+      createInfo.pNext = NULL;
+    }
 
     if (vkCreateInstance(&createInfo, NULL, &comp->instance) != VK_SUCCESS)
       return 2;
+
+    if (enableValidationLayers) {
+      VkDebugUtilsMessengerCreateInfoEXT createInfo = {0};
+      populateDebugMessengerCreateInfo(&createInfo);
+
+      if (CreateDebugUtilsMessengerEXT(comp->instance, &createInfo, NULL,
+                                       &comp->debugMessenger) != VK_SUCCESS) {
+        printf("failed to set up debug messenger\n");
+      }
+    }
   }
 
   uint32_t computeFamily = 0;
@@ -107,15 +161,11 @@ int vkCompute_init(VkCompute *comp) {
 
         for (uint32_t j = 0; j < queueFamilyCount; j++) {
           if (queueFamily[j].queueFlags & VK_QUEUE_COMPUTE_BIT) {
-            computeFamily = j + 1;
+            computeFamily = j;
+            comp->physicalDevice = device;
             break;
           }
         }
-      }
-
-      if (computeFamily != 0) {
-        comp->physicalDevice = device;
-        break;
       }
     }
 
@@ -144,13 +194,12 @@ int vkCompute_init(VkCompute *comp) {
     createInfo.enabledExtensionCount = 0;
     createInfo.ppEnabledExtensionNames = VK_NULL_HANDLE;
 
-    // if (enableValidationLayers) {
-    //   createInfo.enabledLayerCount =
-    //       static_cast<uint32_t>(validationLayers.size());
-    //   createInfo.ppEnabledLayerNames = validationLayers.data();
-    // } else {
-    createInfo.enabledLayerCount = 0;
-    // }
+    if (enableValidationLayers) {
+      createInfo.enabledLayerCount = 1;
+      createInfo.ppEnabledLayerNames = &validationLayer;
+    } else {
+      createInfo.enabledLayerCount = 0;
+    }
 
     if (vkCreateDevice(comp->physicalDevice, &createInfo, NULL,
                        &comp->device) != VK_SUCCESS)
@@ -179,5 +228,67 @@ int vkCompute_new(VkCompute *comp) {
 
   // TODO: init pipeline
 
+  /* Create Descriptor Set Layout */ {}
+
+  /* Create Pipeline */ {}
+
+  /* Create Command Pool */ {}
+
+  /* Create Shader Storage Buffers */ {}
+
   return 0;
+}
+
+static VKAPI_ATTR VkBool32 VKAPI_CALL
+debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+              VkDebugUtilsMessageTypeFlagsEXT messageType,
+              const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData,
+              void *pUserData) {
+
+  if (messageSeverity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT) {
+    fprintf(stderr, "!!! validation layer: %s\n", pCallbackData->pMessage);
+  } else {
+    fprintf(stderr, "validation layer: %s\n", pCallbackData->pMessage);
+  }
+
+  return VK_FALSE;
+};
+
+VkResult CreateDebugUtilsMessengerEXT(
+    VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT *pCreateInfo,
+    const VkAllocationCallbacks *pAllocator,
+    VkDebugUtilsMessengerEXT *pDebugMessenger) {
+  PFN_vkCreateDebugUtilsMessengerEXT func =
+      (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(
+          instance, "vkCreateDebugUtilsMessengerEXT");
+
+  if (func != NULL) {
+    return func(instance, pCreateInfo, pAllocator, pDebugMessenger);
+  } else {
+    return VK_ERROR_EXTENSION_NOT_PRESENT;
+  }
+}
+
+void DestroyDebugUtilsMessengerEXT(VkInstance instance,
+                                   VkDebugUtilsMessengerEXT debugMessenger,
+                                   const VkAllocationCallbacks *pAllocator) {
+  PFN_vkDestroyDebugUtilsMessengerEXT func =
+      (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(
+          instance, "vkDestroyDebugUtilsMessengerEXT");
+  if (func != NULL) {
+    func(instance, debugMessenger, pAllocator);
+  }
+}
+
+void populateDebugMessengerCreateInfo(
+    VkDebugUtilsMessengerCreateInfoEXT *createInfo) {
+  createInfo->sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+  createInfo->messageSeverity =
+      // VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT |
+      VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
+      VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+  createInfo->messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
+                            VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
+                            VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+  createInfo->pfnUserCallback = debugCallback;
 }
