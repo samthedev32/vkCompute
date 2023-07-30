@@ -4,8 +4,6 @@
 #include <stdbool.h>
 #include <vulkan/vulkan.h>
 
-// bool enableValidationLayers = true;
-
 typedef struct {
   VkInstance instance;
   VkDebugUtilsMessengerEXT debugMessenger;
@@ -40,10 +38,15 @@ typedef struct {
   size_t pipelines;
 } VkCompute;
 
+typedef struct {
+
+} asd;
+
 // Initialize vkCompute Engine
 int vkCompute_init(VkCompute *comp);
 
 // Create new Compute Pipeline
-int vkCompute_new(VkCompute *comp);
+int vkCompute_new(VkCompute *comp, const char *path, uint32_t bindingCount,
+                  VkDescriptorType *bindings);
 
 #endif

@@ -211,26 +211,134 @@ int vkCompute_init(VkCompute *comp) {
   return 0;
 }
 
-int vkCompute_new(VkCompute *comp) {
+int vkCompute_new(VkCompute *comp, const char *path, uint32_t bindingCount,
+                  VkDescriptorType *bindings) {
   if (!vkCompute_validate(comp))
     return 1;
 
-  if (comp->pipelines == 0 || comp->pipeline == NULL) {
-    comp->pipelines++;
-    void *tmp =
-        realloc(comp->pipeline, sizeof(*comp->pipeline) * comp->pipelines);
+  size_t id;
+  if (comp->pipeline == NULL) {
+    comp->pipeline = malloc(sizeof(*comp->pipeline));
 
-    if (tmp)
-      comp->pipeline = tmp;
-    else
+    if (!comp->pipeline)
       return 2;
+    else
+      comp->pipelines = 1;
+  } else {
+    void *tmp = realloc(comp->pipeline,
+                        sizeof(*comp->pipeline) * (comp->pipelines + 1));
+
+    if (tmp) {
+      comp->pipeline = tmp;
+      comp->pipelines++;
+
+    } else
+      return 3;
+
+    id = comp->pipelines - 1;
   }
 
-  // TODO: init pipeline
+  /* Create Descriptor Set Layout */ {
+    // TODO: bug
+    VkDescriptorSetLayoutBinding layoutBindings[bindingCount];
+    for (int i = 0; i < bindingCount; i++) {
 
-  /* Create Descriptor Set Layout */ {}
+      layoutBindings[i].binding = i;
+      layoutBindings[i].descriptorCount = 1;
+      layoutBindings[i].descriptorType = bindings[i];
+      layoutBindings[i].pImmutableSamplers = NULL;
+      layoutBindings[i].stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+    }
+    VkDescriptorSetLayoutCreateInfo layoutInfo = {};
+    layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+    layoutInfo.bindingCount = bindingCount;
+    layoutInfo.pBindings = layoutBindings;
 
-  /* Create Pipeline */ {}
+    // TODO: Segfault
+    if (vkCreateDescriptorSetLayout(comp->device, &layoutInfo, NULL,
+                                    &comp->pipeline[id].descriptorSetLayout) !=
+        VK_SUCCESS) {
+      return 4;
+    }
+  }
+  printf("asd\n");
+
+  /* Create Pipeline */ {
+    uint32_t *code;
+    size_t len;
+
+    /* Read File */ {
+      FILE *f = fopen(path, "rb");
+
+      if (!f)
+        return 5;
+
+      fseek(f, 0, SEEK_END);
+      long size = ftell(f);
+      if (size == -1)
+        return 6;
+
+      code = malloc(sizeof(char) * size);
+
+      fseek(f, 0, SEEK_SET);
+
+      len = fread(code, 1, size, f);
+
+      fclose(f);
+
+      if (len != size) {
+        free(code);
+        return 7;
+      }
+    }
+
+    VkShaderModule shaderModule;
+    /* Create Shader Module */ {
+      VkShaderModuleCreateInfo createInfo = {0};
+      createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+      createInfo.codeSize = len;
+      createInfo.pCode = code;
+
+      VkShaderModule shaderModule;
+      if (vkCreateShaderModule(comp->device, &createInfo, NULL,
+                               &shaderModule) != VK_SUCCESS) {
+        return 8;
+      }
+    }
+
+    VkPipelineShaderStageCreateInfo computeShaderStageInfo = {};
+    computeShaderStageInfo.sType =
+        VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    computeShaderStageInfo.stage = VK_SHADER_STAGE_COMPUTE_BIT;
+    computeShaderStageInfo.module = shaderModule;
+    computeShaderStageInfo.pName = "main";
+
+    VkPipelineLayoutCreateInfo pipelineLayoutInfo = {};
+    pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+    pipelineLayoutInfo.setLayoutCount = 1;
+    pipelineLayoutInfo.pSetLayouts = &comp->pipeline[id].descriptorSetLayout;
+
+    if (vkCreatePipelineLayout(comp->device, &pipelineLayoutInfo, NULL,
+                               &comp->pipeline[id].pipelineLayout) !=
+        VK_SUCCESS) {
+      return 9;
+    }
+
+    VkComputePipelineCreateInfo pipelineInfo = {};
+    pipelineInfo.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
+    pipelineInfo.layout = comp->pipeline[id].pipelineLayout;
+    pipelineInfo.stage = computeShaderStageInfo;
+
+    if (vkCreateComputePipelines(comp->device, VK_NULL_HANDLE, 1, &pipelineInfo,
+                                 NULL,
+                                 &comp->pipeline[id].pipeline) != VK_SUCCESS) {
+      return 10;
+    }
+
+    vkDestroyShaderModule(comp->device, shaderModule, NULL);
+  }
+
+  // TODO: finish
 
   /* Create Command Pool */ {}
 
