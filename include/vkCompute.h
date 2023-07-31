@@ -11,6 +11,7 @@ typedef struct {
   VkPhysicalDevice physicalDevice;
   VkDevice device;
 
+  uint32_t computeFamily;
   VkQueue queue;
 
   struct {
