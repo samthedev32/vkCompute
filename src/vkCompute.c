@@ -93,7 +93,7 @@ int vkCompute_init(VkCompute *comp) {
       }
     }
 
-    VkApplicationInfo appInfo = {0};
+    VkApplicationInfo appInfo = {};
     appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
     appInfo.pApplicationName = "Compute Test";
     appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
@@ -101,7 +101,7 @@ int vkCompute_init(VkCompute *comp) {
     appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
     appInfo.apiVersion = VK_API_VERSION_1_0;
 
-    VkInstanceCreateInfo createInfo = {0};
+    VkInstanceCreateInfo createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
     createInfo.pApplicationInfo = &appInfo;
 
@@ -109,7 +109,7 @@ int vkCompute_init(VkCompute *comp) {
     createInfo.enabledExtensionCount = 1;
     createInfo.ppEnabledExtensionNames = &ext;
 
-    VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo = {0};
+    VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo = {};
     if (enableValidationLayers) {
       createInfo.enabledLayerCount = 1;
 
@@ -140,7 +140,7 @@ int vkCompute_init(VkCompute *comp) {
       return 2;
 
     if (enableValidationLayers) {
-      VkDebugUtilsMessengerCreateInfoEXT createInfo = {0};
+      VkDebugUtilsMessengerCreateInfoEXT createInfo = {};
       populateDebugMessengerCreateInfo(&createInfo);
 
       if (CreateDebugUtilsMessengerEXT(comp->instance, &createInfo, NULL,
@@ -190,15 +190,15 @@ int vkCompute_init(VkCompute *comp) {
   // Create Logical Device
   if (!had.device) {
     float queuePriority = 1.0f;
-    VkDeviceQueueCreateInfo queueCreateInfo = {0};
+    VkDeviceQueueCreateInfo queueCreateInfo = {};
     queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
     queueCreateInfo.queueFamilyIndex = comp->computeFamily;
     queueCreateInfo.queueCount = 1;
     queueCreateInfo.pQueuePriorities = &queuePriority;
 
-    VkPhysicalDeviceFeatures deviceFeatures = {0};
+    VkPhysicalDeviceFeatures deviceFeatures = {};
 
-    VkDeviceCreateInfo createInfo = {0};
+    VkDeviceCreateInfo createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 
     createInfo.queueCreateInfoCount = 1;
@@ -364,46 +364,46 @@ int vkCompute_new(VkCompute *comp, const char *path, uint32_t bindingCount,
   }
 
   /* Create Shader Storage Buffers */ {
-      // size_t storageBufferCount = 0;
-      // for (int i = 0; i < bindingCount; i++) {
-      //   switch (types[i]) {
-      //   default:
-      //     break;
+    // size_t storageBufferCount = 0;
+    // for (int i = 0; i < bindingCount; i++) {
+    //   switch (types[i]) {
+    //   default:
+    //     break;
 
-      //   case VK_DESCRIPTOR_TYPE_STORAGE_BUFFER:
-      //     storageBufferCount++;
-      //   }
-      // }
+    //   case VK_DESCRIPTOR_TYPE_STORAGE_BUFFER:
+    //     storageBufferCount++;
+    //   }
+    // }
 
-      // VkDeviceSize bufferSize = sizeof(Layer) * storageBufferCount;
+    // VkDeviceSize bufferSize = sizeof(Layer) * storageBufferCount;
 
-      // // Create a staging buffer used to upload data to the gpu
-      // VkBuffer stagingBuffer;
-      // VkDeviceMemory stagingBufferMemory;
-      // createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-      //              VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-      //                  VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-      //              &stagingBuffer, &stagingBufferMemory);
+    // // Create a staging buffer used to upload data to the gpu
+    // VkBuffer stagingBuffer;
+    // VkDeviceMemory stagingBufferMemory;
+    // createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+    //              VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+    //                  VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+    //              &stagingBuffer, &stagingBufferMemory);
 
-      // void *data;
-      // vkMapMemory(comp->device, stagingBufferMemory, 0, bufferSize, 0,
-      // &data);
-      // memcpy(data, layers.data(), (size_t)bufferSize);
-      // vkUnmapMemory(comp->device, stagingBufferMemory);
+    // void *data;
+    // vkMapMemory(comp->device, stagingBufferMemory, 0, bufferSize, 0,
+    // &data);
+    // memcpy(data, layers.data(), (size_t)bufferSize);
+    // vkUnmapMemory(comp->device, stagingBufferMemory);
 
-      // // Copy initial particle data to all storage buffers
-      // createBuffer(bufferSize,
-      //              VK_BUFFER_USAGE_STORAGE_BUFFER_BIT |
-      //                  VK_BUFFER_USAGE_VERTEX_BUFFER_BIT |
-      //                  VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-      //              VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-      //              &comp->pipeline[id].shaderStorageBuffers,
-      //              &comp->pipeline[id].shaderStorageBuffersMemory);
-      // copyBuffer(stagingBuffer, comp->pipeline[id].shaderStorageBuffers,
-      //            bufferSize);
+    // // Copy initial particle data to all storage buffers
+    // createBuffer(bufferSize,
+    //              VK_BUFFER_USAGE_STORAGE_BUFFER_BIT |
+    //                  VK_BUFFER_USAGE_VERTEX_BUFFER_BIT |
+    //                  VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+    //              VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+    //              &comp->pipeline[id].shaderStorageBuffers,
+    //              &comp->pipeline[id].shaderStorageBuffersMemory);
+    // copyBuffer(stagingBuffer, comp->pipeline[id].shaderStorageBuffers,
+    //            bufferSize);
 
-      // vkDestroyBuffer(comp->device, stagingBuffer, NULL);
-      // vkFreeMemory(comp->device, stagingBufferMemory, NULL);
+    // vkDestroyBuffer(comp->device, stagingBuffer, NULL);
+    // vkFreeMemory(comp->device, stagingBufferMemory, NULL);
   }
 
   /* createUniformBuffers */ {}
@@ -413,18 +413,18 @@ int vkCompute_new(VkCompute *comp, const char *path, uint32_t bindingCount,
   /* createComputeDescriptorSets */ {}
 
   /* createComputeCommandBuffers */ {
-      // VkCommandBufferAllocateInfo allocInfo = {};
-      // allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-      // allocInfo.commandPool = comp->commandPool;
-      // allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-      // allocInfo.commandBufferCount = 1;
+    // VkCommandBufferAllocateInfo allocInfo = {};
+    // allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+    // allocInfo.commandPool = comp->commandPool;
+    // allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+    // allocInfo.commandBufferCount = 1;
 
-      // if (vkAllocateCommandBuffers(device, &allocInfo,
-      // &computeCommandBuffers) !=
-      //     VK_SUCCESS) {
-      //   throw std::runtime_error("failed to allocate compute command
-      //   buffers");
-      // }
+    // if (vkAllocateCommandBuffers(device, &allocInfo,
+    // &computeCommandBuffers) !=
+    //     VK_SUCCESS) {
+    //   throw std::runtime_error("failed to allocate compute command
+    //   buffers");
+    // }
   }
 
   /* createSyncObjects */ {
@@ -525,37 +525,38 @@ void populateDebugMessengerCreateInfo(
 }
 
 void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage,
-                  VkMemoryPropertyFlags properties, VkBuffer &buffer,
-                  VkDeviceMemory &bufferMemory) {
-  VkBufferCreateInfo bufferInfo{};
+                  VkMemoryPropertyFlags properties, VkBuffer *buffer,
+                  VkDeviceMemory *bufferMemory) {
+  VkBufferCreateInfo bufferInfo = {};
   bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
   bufferInfo.size = size;
   bufferInfo.usage = usage;
   bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-  if (vkCreateBuffer(device, &bufferInfo, nullptr, &buffer) != VK_SUCCESS) {
-    throw std::runtime_error("failed to create buffer");
+  if (vkCreateBuffer(device, &bufferInfo, NULL, buffer) != VK_SUCCESS) {
+    printf("failed to create buffer\n");
+    exit(-1);
   }
 
   VkMemoryRequirements memRequirements;
   vkGetBufferMemoryRequirements(device, buffer, &memRequirements);
 
-  VkMemoryAllocateInfo allocInfo{};
+  VkMemoryAllocateInfo allocInfo = {};
   allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
   allocInfo.allocationSize = memRequirements.size;
   allocInfo.memoryTypeIndex =
       findMemoryType(memRequirements.memoryTypeBits, properties);
 
-  if (vkAllocateMemory(device, &allocInfo, nullptr, &bufferMemory) !=
-      VK_SUCCESS) {
-    throw std::runtime_error("failed to allocate buffer memory");
+  if (vkAllocateMemory(device, &allocInfo, NULL, &bufferMemory) != VK_SUCCESS) {
+    printf("failed to allocate buffer memory\n");
+    exit(-1);
   }
 
   vkBindBufferMemory(device, buffer, bufferMemory, 0);
 }
 
 void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size) {
-  VkCommandBufferAllocateInfo allocInfo{};
+  VkCommandBufferAllocateInfo allocInfo = {};
   allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
   allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
   allocInfo.commandPool = commandPool;
@@ -564,19 +565,19 @@ void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size) {
   VkCommandBuffer commandBuffer;
   vkAllocateCommandBuffers(device, &allocInfo, &commandBuffer);
 
-  VkCommandBufferBeginInfo beginInfo{};
+  VkCommandBufferBeginInfo beginInfo = {};
   beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
   beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
   vkBeginCommandBuffer(commandBuffer, &beginInfo);
 
-  VkBufferCopy copyRegion{};
+  VkBufferCopy copyRegion = {};
   copyRegion.size = size;
   vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
 
   vkEndCommandBuffer(commandBuffer);
 
-  VkSubmitInfo submitInfo{};
+  VkSubmitInfo submitInfo = {};
   submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
   submitInfo.commandBufferCount = 1;
   submitInfo.pCommandBuffers = &commandBuffer;
@@ -596,5 +597,6 @@ uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) {
     }
   }
 
-  throw std::runtime_error("failed to find suitable memory type");
+  printf("failed to find suitable memory type\n");
+  exit(-1);
 }
